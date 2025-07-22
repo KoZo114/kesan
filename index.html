@@ -5,7 +5,7 @@
 <title>月次収支シート</title>
 <style>
   body{font-family:sans-serif;margin:2rem;}
-  h1{font-size:1.4rem;margin-bottom:1rem;}
+  h1{font-size:1.4rem;margin:.5rem 0 1rem;}
   table{border-collapse:collapse;width:100%;max-width:550px;}
   th,td{border:1px solid #999;padding:.4rem;text-align:right;}
   th:first-child,td:first-child{text-align:left;}
@@ -15,19 +15,25 @@
 </style>
 </head>
 <body>
-<h1>2025.7　月次収支シート</h1>
+
+<!-- ★ 年月選択 -->
+<label>対象月：
+  <input id="ym" type="month">
+</label>
+<h1 id="title"></h1>
 
 <table>
+  <!-- （以下は前回と同じ：科目欄＋入力ボックス） -->
   <thead><tr><th>科目</th><th>金額(円)</th></tr></thead>
   <tbody>
-    <!-- 住友グループ -->
+    <!-- 住友 -->
     <tr><td>住友 経費</td><td><input id="sumitomo_keihi"   type="number" value="37692"></td></tr>
     <tr><td>住友 Amazon</td><td><input id="sumitomo_amazon"  type="number" value="1999"></td></tr>
     <tr><td>住友 その他①</td><td><input id="sumitomo_etc1"   type="number" value="7850"></td></tr>
     <tr><td>住友 その他②</td><td><input id="sumitomo_etc2"   type="number" value="7000"></td></tr>
     <tr class="subtotal"><td>住友 小計</td><td><span id="sumitomo_total">0</span></td></tr>
 
-    <!-- みずほ銀行 -->
+    <!-- みずほ -->
     <tr><td>みずほ①</td><td><input id="mizuho_1" type="number" value="111670"></td></tr>
     <tr><td>みずほ②</td><td><input id="mizuho_2" type="number" value="200451"></td></tr>
     <tr><td>みずほ③</td><td><input id="mizuho_3" type="number" value="2387"></td></tr>
@@ -35,7 +41,7 @@
     <tr><td>健康保険(みずほ)</td><td><input id="mizuho_health" type="number" value="32424"></td></tr>
     <tr class="subtotal"><td>みずほ 小計</td><td><span id="mizuho_total">0</span></td></tr>
 
-    <!-- その他固定費 -->
+    <!-- 固定費 -->
     <tr><td>Sparkle 支払</td><td><input id="sparkle" type="number" value="39615"></td></tr>
     <tr><td>家賃</td><td><input id="rent" type="number" value="88000"></td></tr>
     <tr><td>リクルート</td><td><input id="recruit" type="number" value="76000"></td></tr>
@@ -53,26 +59,40 @@
 <script>
 function v(id){return Number(document.getElementById(id).value || 0);}
 function s(id,val){document.getElementById(id).textContent = val.toLocaleString();}
+
+function setTitleFromYM(){
+  const ym = document.getElementById('ym').value;   // 例 "2025-07"
+  if(!ym){return;}
+  const [y,m] = ym.split('-');
+  document.getElementById('title').textContent = `${y}.${Number(m)}`; // 07→7
+}
+
 function calc(){
-  // 住友小計
+  // 小計
   const sumitomoTotal = v('sumitomo_keihi')+v('sumitomo_amazon')+v('sumitomo_etc1')+v('sumitomo_etc2');
   s('sumitomo_total',sumitomoTotal);
 
-  // みずほ小計
   const mizuhoTotal = v('mizuho_1')+v('mizuho_2')+v('mizuho_3')+v('mizuho_4')+v('mizuho_health');
   s('mizuho_total',mizuhoTotal);
 
-  // 支出合計
+  // 支出合計 & 差額
   const expense = sumitomoTotal + mizuhoTotal + v('sparkle') + v('rent') + v('recruit') + v('tax');
   s('expense_total',expense);
-
-  // 収支差額
-  const bal = v('goal') - expense;
-  s('balance',bal);
+  s('balance', v('goal') - expense);
 }
-// すべての入力欄にリアルタイム計算を紐付け
-document.querySelectorAll('input').forEach(el=>el.addEventListener('input',calc));
-window.addEventListener('DOMContentLoaded',calc);
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  // ▼ 年月入力を本日で初期化
+  const today = new Date();
+  const ymInit = today.toISOString().slice(0,7); // "YYYY-MM"
+  document.getElementById('ym').value = ymInit;
+  setTitleFromYM();
+  calc();
+
+  // 再計算トリガー
+  document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input',calc));
+  document.getElementById('ym').addEventListener('input',setTitleFromYM);
+});
 </script>
 </body>
 </html>
