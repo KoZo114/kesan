@@ -2,37 +2,47 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<!-- ★ 1. モバイル対応 -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>月次収支シート</title>
 <style>
   /* --- 基本スタイル --- */
   body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;margin:0;padding:2rem 1rem;color:#222;}
-  h1{font-size:1.4rem;margin:.5rem 0 1rem;text-align:center;}
+  h1{font-size:1.35rem;margin:.4rem 0 1rem;text-align:center;}
   table{border-collapse:collapse;width:100%;}
-  th,td{border:1px solid #999;padding:.5rem;text-align:right;font-size:.95rem;}
+  th,td{border:1px solid #999;padding:.45rem;text-align:right;font-size:.9rem;}
   th:first-child,td:first-child{text-align:left;}
   .subtotal{background:#f5f5f5;font-weight:bold;}
   .total   {background:#e9ffe9;font-weight:bold;}
-  input[type=number]{width:100px;text-align:right;font-size:1rem;padding:.2rem .3rem;}
-  input[type=month]{font-size:1rem;}
-  label{display:block;text-align:center;margin-bottom:.5rem;font-size:1rem;}
+  input[type=number]{width:95px;text-align:right;font-size:.95rem;padding:.2rem .3rem;}
+  input[type=month]{font-size:.95rem;}
+  label{display:block;text-align:center;margin-bottom:.4rem;font-size:.95rem;}
 
-  /* ★ 2. 中央寄せラッパー */
-  .wrapper{max-width:620px;margin:0 auto;}
+  /* 1. ラッパー幅をさらに絞る */
+  .wrapper{max-width:540px;margin:0 auto;}
 
-  /* --- 3. スマホ専用調整 --- */
+  /* 2. スマホ微調整 */
   @media (max-width:600px){
     body{padding:1rem;}
-    h1{font-size:1.3rem;}
-    label{font-size:1.05rem;}
-    th,td{font-size:1rem;padding:.55rem;}
-    input[type=number]{width:100%;box-sizing:border-box;font-size:1.05rem;}
+    h1{font-size:1.2rem;}
+    label{font-size:.95rem;}
+    th,td{font-size:.95rem;padding:.5rem;}
+    input[type=number]{width:100%;box-sizing:border-box;font-size:1rem;}
+  }
+
+  /* 3. 印刷用設定 */
+  @media print{
+    @page{size:A4; margin:14mm;}      /* 余白を 14 mm に固定 */
+    body{padding:0;color:#000;font-size:11px;}
+    .wrapper{max-width:17cm;}         /* 用紙内に確実に収める */
+    h1{font-size:1rem;margin:.2rem 0 .6rem;}
+    label{display:none;}              /* 月入力は非表示（印刷時はタイトルで伝わるため） */
+    input[type=number]{border:none;background:none;width:auto;font-size:11px;padding:0;}
+    th,td{font-size:11px;padding:.35rem;}
   }
 </style>
 </head>
 <body>
-<div class="wrapper"><!-- ★ ラッパー開始 -->
+<div class="wrapper">
 
 <label>対象月：<input id="ym" type="month"></label>
 <h1 id="title"></h1>
@@ -55,7 +65,6 @@
     <tr><td>健康保険</td><td><input id="mizuho_health" type="number" value="32424"></td></tr>
     <tr class="subtotal"><td>みずほ 小計</td><td><span id="mizuho_total">0</span></td></tr>
 
-    <!-- 銀行合計 -->
     <tr class="subtotal"><td>銀行 合計</td><td><span id="bank_total">0</span></td></tr>
 
     <!-- 固定費 -->
@@ -68,44 +77,40 @@
   </tbody>
 </table>
 
-<p style="margin-top:1.5rem;text-align:center;">
+<p style="margin-top:1rem;text-align:center;font-size:.95rem;">
   月間売上目標：<input id="goal" type="number" value="500000" style="width:120px;"> 円　
   → 差額 <strong><span id="balance">0</span> 円</strong>
 </p>
-</div><!-- ★ ラッパー終了 -->
+</div>
 
 <script>
-function v(id){ return Number(document.getElementById(id).value || 0); }
-function s(id,val){ document.getElementById(id).textContent = val.toLocaleString(); }
+function v(id){return Number(document.getElementById(id).value || 0);}
+function s(id,val){document.getElementById(id).textContent = val.toLocaleString();}
 
 function setTitleFromYM(){
-  const ym = document.getElementById('ym').value;
-  if(!ym) return;
-  const [y,m] = ym.split('-');
-  document.getElementById('title').textContent = `${y}.${Number(m)}`;
+  const ym=document.getElementById('ym').value;
+  if(!ym)return;
+  const [y,m]=ym.split('-');
+  document.getElementById('title').textContent=`${y}.${Number(m)}`;
 }
 
 function calc(){
-  const sumitomoTotal = v('sumitomo_keihi')+v('sumitomo_amazon')+v('sumitomo_etc1')+v('sumitomo_etc2');
-  s('sumitomo_total', sumitomoTotal);
-
-  const mizuhoTotal = v('mizuho_1')+v('mizuho_2')+v('mizuho_3')+v('mizuho_4')+v('mizuho_health');
-  s('mizuho_total', mizuhoTotal);
-
-  const bankTotal = sumitomoTotal + mizuhoTotal;
-  s('bank_total', bankTotal);
-
-  const expense = bankTotal + v('sparkle') + v('rent') + v('recruit');
-  s('expense_total', expense);
-
-  s('balance', v('goal') - expense);
+  const sumitomoTotal=v('sumitomo_keihi')+v('sumitomo_amazon')+v('sumitomo_etc1')+v('sumitomo_etc2');
+  s('sumitomo_total',sumitomoTotal);
+  const mizuhoTotal=v('mizuho_1')+v('mizuho_2')+v('mizuho_3')+v('mizuho_4')+v('mizuho_health');
+  s('mizuho_total',mizuhoTotal);
+  const bankTotal=sumitomoTotal+mizuhoTotal;
+  s('bank_total',bankTotal);
+  const expense=bankTotal+v('sparkle')+v('rent')+v('recruit');
+  s('expense_total',expense);
+  s('balance',v('goal')-expense);
 }
 
-window.addEventListener('DOMContentLoaded', ()=>{
-  document.getElementById('ym').value = new Date().toISOString().slice(0,7);
-  setTitleFromYM(); calc();
-  document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input', calc));
-  document.getElementById('ym').addEventListener('input', setTitleFromYM);
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ym').value=new Date().toISOString().slice(0,7);
+  setTitleFromYM();calc();
+  document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input',calc));
+  document.getElementById('ym').addEventListener('input',setTitleFromYM);
 });
 </script>
 </body>
