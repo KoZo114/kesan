@@ -2,19 +2,37 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- ★ 1. モバイル対応 -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>月次収支シート</title>
 <style>
-  body{font-family:sans-serif;margin:2rem;}
-  h1{font-size:1.4rem;margin:.5rem 0 1rem;}
-  table{border-collapse:collapse;width:100%;max-width:550px;}
-  th,td{border:1px solid #999;padding:.4rem;text-align:right;}
+  /* --- 基本スタイル --- */
+  body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;margin:0;padding:2rem 1rem;color:#222;}
+  h1{font-size:1.4rem;margin:.5rem 0 1rem;text-align:center;}
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #999;padding:.5rem;text-align:right;font-size:.95rem;}
   th:first-child,td:first-child{text-align:left;}
   .subtotal{background:#f5f5f5;font-weight:bold;}
   .total   {background:#e9ffe9;font-weight:bold;}
-  input[type=number]{width:90px;text-align:right;}
+  input[type=number]{width:100px;text-align:right;font-size:1rem;padding:.2rem .3rem;}
+  input[type=month]{font-size:1rem;}
+  label{display:block;text-align:center;margin-bottom:.5rem;font-size:1rem;}
+
+  /* ★ 2. 中央寄せラッパー */
+  .wrapper{max-width:620px;margin:0 auto;}
+
+  /* --- 3. スマホ専用調整 --- */
+  @media (max-width:600px){
+    body{padding:1rem;}
+    h1{font-size:1.3rem;}
+    label{font-size:1.05rem;}
+    th,td{font-size:1rem;padding:.55rem;}
+    input[type=number]{width:100%;box-sizing:border-box;font-size:1.05rem;}
+  }
 </style>
 </head>
 <body>
+<div class="wrapper"><!-- ★ ラッパー開始 -->
 
 <label>対象月：<input id="ym" type="month"></label>
 <h1 id="title"></h1>
@@ -37,7 +55,7 @@
     <tr><td>健康保険</td><td><input id="mizuho_health" type="number" value="32424"></td></tr>
     <tr class="subtotal"><td>みずほ 小計</td><td><span id="mizuho_total">0</span></td></tr>
 
-    <!-- ★ 追加：銀行合計 -->
+    <!-- 銀行合計 -->
     <tr class="subtotal"><td>銀行 合計</td><td><span id="bank_total">0</span></td></tr>
 
     <!-- 固定費 -->
@@ -46,15 +64,15 @@
     <tr><td>リクルート</td><td><input id="recruit" type="number" value="76000"></td></tr>
     <tr><td>税金(概算)</td><td><input id="tax" type="number" value="25876"></td></tr>
 
-    <!-- 税金を含まない支出合計 -->
     <tr class="total"><td>支出合計 (税金除く)</td><td><span id="expense_total">0</span></td></tr>
   </tbody>
 </table>
 
-<p style="margin-top:1.5rem;">
-  月間売上目標：<input id="goal" type="number" value="500000"> 円　
+<p style="margin-top:1.5rem;text-align:center;">
+  月間売上目標：<input id="goal" type="number" value="500000" style="width:120px;"> 円　
   → 差額 <strong><span id="balance">0</span> 円</strong>
 </p>
+</div><!-- ★ ラッパー終了 -->
 
 <script>
 function v(id){ return Number(document.getElementById(id).value || 0); }
@@ -68,31 +86,24 @@ function setTitleFromYM(){
 }
 
 function calc(){
-  // 住友・みずほ小計
   const sumitomoTotal = v('sumitomo_keihi')+v('sumitomo_amazon')+v('sumitomo_etc1')+v('sumitomo_etc2');
   s('sumitomo_total', sumitomoTotal);
 
   const mizuhoTotal = v('mizuho_1')+v('mizuho_2')+v('mizuho_3')+v('mizuho_4')+v('mizuho_health');
   s('mizuho_total', mizuhoTotal);
 
-  // ★ 銀行合計
   const bankTotal = sumitomoTotal + mizuhoTotal;
   s('bank_total', bankTotal);
 
-  // ★ 支出合計（税金を除外）
   const expense = bankTotal + v('sparkle') + v('rent') + v('recruit');
   s('expense_total', expense);
 
-  // 差額
   s('balance', v('goal') - expense);
 }
 
 window.addEventListener('DOMContentLoaded', ()=>{
-  const today = new Date();
-  document.getElementById('ym').value = today.toISOString().slice(0,7);
-  setTitleFromYM();
-  calc();
-
+  document.getElementById('ym').value = new Date().toISOString().slice(0,7);
+  setTitleFromYM(); calc();
   document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input', calc));
   document.getElementById('ym').addEventListener('input', setTitleFromYM);
 });
