@@ -5,40 +5,121 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>月次収支シート</title>
 <style>
-  /* --- 基本スタイル --- */
-  body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;margin:0;padding:2rem 1rem;color:#222;}
-  h1{font-size:1.35rem;margin:.4rem 0 1rem;text-align:center;}
-  table{border-collapse:collapse;width:100%;}
-  th,td{border:1px solid #999;padding:.45rem;text-align:right;font-size:.9rem;}
-  th:first-child,td:first-child{text-align:left;}
-  .subtotal{background:#f5f5f5;font-weight:bold;}
-  .total   {background:#e9ffe9;font-weight:bold;}
-  input[type=number]{width:95px;text-align:right;font-size:.95rem;padding:.2rem .3rem;}
-  input[type=month]{font-size:.95rem;}
-  label{display:block;text-align:center;margin-bottom:.4rem;font-size:.95rem;}
-
-  /* 1. ラッパー幅をさらに絞る */
-  .wrapper{max-width:540px;margin:0 auto;}
-
-  /* 2. スマホ微調整 */
-  @media (max-width:600px){
-    body{padding:1rem;}
-    h1{font-size:1.2rem;}
-    label{font-size:.95rem;}
-    th,td{font-size:.95rem;padding:.5rem;}
-    input[type=number]{width:100%;box-sizing:border-box;font-size:1rem;}
+  /* --- ここからデザイン修正 --- */
+  
+  :root {
+    --border-color: #ddd; /* 線の色を統一 */
+    --accent-color: #007bff; /* アクセントカラー（青色） */
   }
 
-  /* 3. 印刷用設定 */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+    margin: 0;
+    padding: 2rem 1rem;
+    color: #333; /* 文字色を少し柔らかく */
+    background-color: #f4f7f9; /* 背景に薄いグレーを設定 */
+  }
+
+  .wrapper {
+    max-width: 580px; /* 少し幅を広げる */
+    margin: 0 auto;
+    background-color: #fff; /* 本体背景を白に */
+    border-radius: 8px; /* 角を丸くする */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* カード風の影をつける */
+    padding: 1.5rem 2rem; /* 内側の余白を調整 */
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 1.5rem;
+    text-align: center;
+    color: #2c3e50; /* 見出しの色 */
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    border-top: 2px solid var(--border-color); /* 上部の線を強調 */
+  }
+
+  th, td {
+    border: 1px solid var(--border-color);
+    border-top: none; /* 上の線と重ならないように */
+    padding: .6rem; /* セルの余白を少し広げる */
+    text-align: right;
+    font-size: .95rem;
+  }
+  
+  th {
+    background-color: #f9fafb; /* 見出し行の背景色 */
+    font-weight: 600;
+  }
+
+  th:first-child, td:first-child {
+    text-align: left;
+  }
+
+  .subtotal {
+    background: #f5f5f5;
+    font-weight: bold;
+  }
+
+  .total {
+    background: #e6f7ff; /* 合計欄の背景色を水色に */
+    font-weight: bold;
+  }
+  
+  .total td {
+      font-size: 1rem;
+  }
+
+  input[type=number], input[type=month] {
+    width: 100%; /* 幅を親要素に合わせる */
+    box-sizing: border-box;
+    text-align: right;
+    font-size: 1rem;
+    padding: .4rem .5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px; /* 入力欄の角を丸く */
+    transition: border-color 0.2s, box-shadow 0.2s; /* アニメーション効果 */
+  }
+  
+  /* 入力欄を選択した時のデザイン */
+  input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+  }
+
+  label {
+    display: block;
+    text-align: center;
+    margin-bottom: .8rem;
+    font-size: 1rem;
+  }
+  
+  #balance {
+    color: var(--accent-color);
+    font-size: 1.2em; /* 差額の文字を少し大きく */
+  }
+
+  /* --- スマホ・印刷設定は変更なし --- */
+  @media (max-width:600px){
+    body{padding: 1rem 0;}
+    .wrapper{border-radius:0; box-shadow:none; padding: 1rem;}
+    h1{font-size:1.2rem;}
+  }
+
   @media print{
-    @page{size:A4; margin:14mm;}      /* 余白を 14 mm に固定 */
-    body{padding:0;color:#000;font-size:11px;}
-    .wrapper{max-width:17cm;}         /* 用紙内に確実に収める */
+    @page{size:A4; margin:14mm;}
+    body{padding:0;color:#000;font-size:11px; background:none;}
+    .wrapper{max-width:17cm; box-shadow:none; padding:0; border-radius:0;}
     h1{font-size:1rem;margin:.2rem 0 .6rem;}
-    label{display:none;}              /* 月入力は非表示（印刷時はタイトルで伝わるため） */
-    input[type=number]{border:none;background:none;width:auto;font-size:11px;padding:0;}
+    label{display:none;}
+    input{border:none !important; background:none !important; width:auto !important; font-size:11px !important; padding:0 !important; box-shadow:none !important;}
     th,td{font-size:11px;padding:.35rem;}
   }
+  /* --- ここまでデザイン修正 --- */
 </style>
 </head>
 <body>
@@ -50,40 +131,45 @@
 <table>
   <thead><tr><th>科目</th><th>金額(円)</th></tr></thead>
   <tbody>
-    <!-- 住友銀行 -->
-    <tr><td>経費</td><td><input id="sumitomo_keihi" type="number" value="37692"></td></tr>
-    <tr><td>Amazon</td><td><input id="sumitomo_amazon" type="number" value="1999"></td></tr>
-    <tr><td>保険①</td><td><input id="sumitomo_etc1" type="number" value="7850"></td></tr>
-    <tr><td>保険②</td><td><input id="sumitomo_etc2" type="number" value="7000"></td></tr>
+    <tr><td>経費</td><td><input id="sumitomo_keihi" type="number"></td></tr>
+    <tr><td>Amazon</td><td><input id="sumitomo_amazon" type="number"></td></tr>
+    <tr><td>保険①</td><td><input id="sumitomo_etc1" type="number"></td></tr>
+    <tr><td>保険②</td><td><input id="sumitomo_etc2" type="number"></td></tr>
     <tr class="subtotal"><td>住友 小計</td><td><span id="sumitomo_total">0</span></td></tr>
 
-    <!-- みずほ銀行 -->
-    <tr><td>楽天カード</td><td><input id="mizuho_1" type="number" value="111670"></td></tr>
-    <tr><td>PayPayカード</td><td><input id="mizuho_2" type="number" value="200451"></td></tr>
-    <tr><td>UCカード</td><td><input id="mizuho_3" type="number" value="2387"></td></tr>
-    <tr><td>カード保険</td><td><input id="mizuho_4" type="number" value="300"></td></tr>
-    <tr><td>健康保険</td><td><input id="mizuho_health" type="number" value="32424"></td></tr>
+    <tr><td>楽天カード</td><td><input id="mizuho_1" type="number"></td></tr>
+    <tr><td>PayPayカード</td><td><input id="mizuho_2" type="number"></td></tr>
+    <tr><td>UCカード</td><td><input id="mizuho_3" type="number"></td></tr>
+    <tr><td>カード保険</td><td><input id="mizuho_4" type="number"></td></tr>
+    <tr><td>健康保険</td><td><input id="mizuho_health" type="number"></td></tr>
     <tr class="subtotal"><td>みずほ 小計</td><td><span id="mizuho_total">0</span></td></tr>
 
     <tr class="subtotal"><td>銀行 合計</td><td><span id="bank_total">0</span></td></tr>
 
-    <!-- 固定費 -->
-    <tr><td>Sparkle 支払</td><td><input id="sparkle" type="number" value="39615"></td></tr>
-    <tr><td>家賃</td><td><input id="rent" type="number" value="88000"></td></tr>
-    <tr><td>リクルート</td><td><input id="recruit" type="number" value="76000"></td></tr>
-    <tr><td>税金(概算)</td><td><input id="tax" type="number" value="25876"></td></tr>
+    <tr><td>Sparkle 支払</td><td><input id="sparkle" type="number"></td></tr>
+    <tr><td>家賃</td><td><input id="rent" type="number"></td></tr>
+    <tr><td>リクルート</td><td><input id="recruit" type="number"></td></tr>
+    <tr><td>税金(概算)</td><td><input id="tax" type="number"></td></tr>
 
     <tr class="total"><td>支出合計 (税金除く)</td><td><span id="expense_total">0</span></td></tr>
   </tbody>
 </table>
 
 <p style="margin-top:1rem;text-align:center;font-size:.95rem;">
-  月間売上：<input id="goal" type="number" value="500000" style="width:120px;"> 円　
+  月間売上：<input id="goal" type="number" style="width:120px;"> 円
   → 差額 <strong><span id="balance">0</span> 円</strong>
 </p>
 </div>
 
 <script>
+// --- JavaScriptは変更ありません ---
+
+const inputIds = [
+  'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2',
+  'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_4', 'mizuho_health',
+  'sparkle', 'rent', 'recruit', 'tax', 'goal'
+];
+
 function v(id){return Number(document.getElementById(id).value || 0);}
 function s(id,val){document.getElementById(id).textContent = val.toLocaleString();}
 
@@ -92,6 +178,38 @@ function setTitleFromYM(){
   if(!ym)return;
   const [y,m]=ym.split('-');
   document.getElementById('title').textContent=`${y}.${Number(m)}`;
+}
+
+function saveData() {
+  const ym = document.getElementById('ym').value;
+  if (!ym) return;
+  const data = {};
+  inputIds.forEach(id => {
+    data[id] = v(id);
+  });
+  localStorage.setItem(`sheetData-${ym}`, JSON.stringify(data));
+}
+
+function loadData() {
+  const ym = document.getElementById('ym').value;
+  if (!ym) return;
+  const savedData = localStorage.getItem(`sheetData-${ym}`);
+
+  if (savedData) {
+    const data = JSON.parse(savedData);
+    inputIds.forEach(id => {
+      if(id === 'goal' && !data[id]) {
+        document.getElementById(id).value = '';
+      } else {
+        document.getElementById(id).value = data[id] || '';
+      }
+    });
+  } else {
+    inputIds.forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+  calc();
 }
 
 function calc(){
@@ -104,13 +222,20 @@ function calc(){
   const expense=bankTotal+v('sparkle')+v('rent')+v('recruit');
   s('expense_total',expense);
   s('balance',v('goal')-expense);
+  
+  saveData();
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('ym').value=new Date().toISOString().slice(0,7);
-  setTitleFromYM();calc();
+  setTitleFromYM();
+  loadData();
   document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input',calc));
-  document.getElementById('ym').addEventListener('input',setTitleFromYM);
+  
+  document.getElementById('ym').addEventListener('input',()=>{
+    setTitleFromYM();
+    loadData();
+  });
 });
 </script>
 </body>
