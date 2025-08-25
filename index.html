@@ -72,6 +72,11 @@
   .total td {
       font-size: 1rem;
   }
+  
+  /* 所得がマイナスの場合の文字色 */
+  .negative {
+    color: #e53935;
+  }
 
   input[type=number], input[type=month] {
     width: 100%; /* 幅を親要素に合わせる */
@@ -131,6 +136,7 @@
 <table>
   <thead><tr><th>科目</th><th>金額(円)</th></tr></thead>
   <tbody>
+    <tr><td>売上</td><td><input id="sales" type="number"></td></tr>
     <tr><td>経費</td><td><input id="sumitomo_keihi" type="number"></td></tr>
     <tr><td>Amazon</td><td><input id="sumitomo_amazon" type="number"></td></tr>
     <tr><td>保険①</td><td><input id="sumitomo_etc1" type="number"></td></tr>
@@ -149,35 +155,47 @@
     <tr><td>Sparkle 支払</td><td><input id="sparkle" type="number"></td></tr>
     <tr><td>家賃</td><td><input id="rent" type="number"></td></tr>
     <tr><td>リクルート</td><td><input id="recruit" type="number"></td></tr>
-    <tr><td>税金(概算)</td><td><input id="tax" type="number"></td></tr>
-
-    <tr class="total"><td>支出合計 (税金除く)</td><td><span id="expense_total">0</span></td></tr>
-  </tbody>
+    
+    <tr class="subtotal"><td>経費合計</td><td><span id="expense_total">0</span></td></tr>
+    <tr class="total"><td>所得 (売上 - 経費)</td><td><span id="profit">0</span></td></tr>
+    <tr><td>税金(概算)</td><td><span id="tax_estimate">0</span></td></tr>
+    <tr class="total"><td>手取り (所得 - 税金)</td><td><span id="net_profit">0</span></td></tr>
+    </tbody>
 </table>
 
-<p style="margin-top:1rem;text-align:center;font-size:.95rem;">
-  月間売上：<input id="goal" type="number" style="width:120px;"> 円
-  → 差額 <strong><span id="balance">0</span> 円</strong>
-</p>
 </div>
 
 <script>
-// --- JavaScriptは変更ありません ---
+// --- ここからJavaScript修正 ---
 
+// 入力欄のIDリストを更新
 const inputIds = [
+  'sales', // 売上を追加
   'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2',
   'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_4', 'mizuho_health',
-  'sparkle', 'rent', 'recruit', 'tax', 'goal'
+  'sparkle', 'rent', 'recruit'
+  // 'tax', 'goal' は自動計算になったので削除
 ];
 
 function v(id){return Number(document.getElementById(id).value || 0);}
-function s(id,val){document.getElementById(id).textContent = val.toLocaleString();}
+
+// 表示用の関数を更新（マイナスの場合に色を付ける機能を追加）
+function s(id, val){
+  const el = document.getElementById(id);
+  el.textContent = val.toLocaleString();
+  if (val < 0) {
+    el.classList.add('negative');
+  } else {
+    el.classList.remove('negative');
+  }
+}
+
 
 function setTitleFromYM(){
   const ym=document.getElementById('ym').value;
   if(!ym)return;
   const [y,m]=ym.split('-');
-  document.getElementById('title').textContent=`${y}.${Number(m)}`;
+  document.getElementById('title').textContent=`${y}.${Number(m)}の収支`; // タイトルを少し変更
 }
 
 function saveData() {
@@ -198,11 +216,9 @@ function loadData() {
   if (savedData) {
     const data = JSON.parse(savedData);
     inputIds.forEach(id => {
-      if(id === 'goal' && !data[id]) {
-        document.getElementById(id).value = '';
-      } else {
-        document.getElementById(id).value = data[id] || '';
-      }
+      // 0は保存されているが、空欄にしたい場合があるため、
+      // `data[id] || ''` のようにせず、そのまま値をセットする
+      document.getElementById(id).value = data[id];
     });
   } else {
     inputIds.forEach(id => {
@@ -212,31 +228,58 @@ function loadData() {
   calc();
 }
 
+// 計算ロジックを全面的に更新
 function calc(){
-  const sumitomoTotal=v('sumitomo_keihi')+v('sumitomo_amazon')+v('sumitomo_etc1')+v('sumitomo_etc2');
-  s('sumitomo_total',sumitomoTotal);
-  const mizuhoTotal=v('mizuho_1')+v('mizuho_2')+v('mizuho_3')+v('mizuho_4')+v('mizuho_health');
-  s('mizuho_total',mizuhoTotal);
-  const bankTotal=sumitomoTotal+mizuhoTotal;
-  s('bank_total',bankTotal);
-  const expense=bankTotal+v('sparkle')+v('rent')+v('recruit');
-  s('expense_total',expense);
-  s('balance',v('goal')-expense);
+  // --- 支出の計算 ---
+  const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2');
+  s('sumitomo_total', sumitomoTotal);
+
+  const mizuhoTotal = v('mizuho_1') + v('mizuho_2') + v('mizuho_3') + v('mizuho_4') + v('mizuho_health');
+  s('mizuho_total', mizuhoTotal);
+
+  const bankTotal = sumitomoTotal + mizuhoTotal;
+  s('bank_total', bankTotal);
+
+  // 経費合計を計算
+  const expenseTotal = bankTotal + v('sparkle') + v('rent') + v('recruit');
+  s('expense_total', expenseTotal);
+
+  // --- 収支と税金の計算 ---
+  const sales = v('sales');
   
-  saveData();
+  // 1. 所得を計算
+  const profit = sales - expenseTotal;
+  s('profit', profit);
+
+  // 2. 税金を計算（所得がマイナスの場合は税金0）
+  const taxableProfit = Math.max(0, profit); // 課税対象の所得（0未満にはならない）
+  const taxRate = 0.10 + 0.15 + 0.05; // 住民税10% + 所得税15% + 事業税5%
+  const taxEstimate = Math.round(taxableProfit * taxRate);
+  s('tax_estimate', taxEstimate);
+  
+  // 3. 手取りを計算
+  const netProfit = profit - taxEstimate;
+  s('net_profit', netProfit);
+
+  saveData(); // データを自動保存
 }
 
+// ページ読み込み時の処理
 window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('ym').value=new Date().toISOString().slice(0,7);
+  document.getElementById('ym').value = new Date().toISOString().slice(0,7);
   setTitleFromYM();
   loadData();
-  document.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener('input',calc));
+
+  // 全ての入力欄で入力があるたびに再計算する
+  document.querySelectorAll('input[type=number]').forEach(el => el.addEventListener('input', calc));
   
-  document.getElementById('ym').addEventListener('input',()=>{
+  // 対象月が変更された時の処理
+  document.getElementById('ym').addEventListener('input', () => {
     setTitleFromYM();
     loadData();
   });
 });
+// --- ここまでJavaScript修正 ---
 </script>
 </body>
 </html>
