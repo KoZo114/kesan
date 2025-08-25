@@ -10,6 +10,8 @@
   :root {
     --border-color: #ddd; /* 線の色を統一 */
     --accent-color: #007bff; /* アクセントカラー（青色） */
+    --profit-bg: #e6f7ff;  /* 利益が出た時の背景色 */
+    --loss-bg: #ffebee;   /* 赤字の時の背景色 */
   }
 
   body {
@@ -65,17 +67,28 @@
   }
 
   .total {
-    background: #e6f7ff; /* 合計欄の背景色を水色に */
+    background: var(--profit-bg); /* 合計欄の背景色を水色に */
     font-weight: bold;
   }
   
-  .total td {
+  /* 最終的な残額のスタイル */
+  .final-balance {
+      font-size: 1.1rem;
+      font-weight: bold;
+  }
+  
+  .total td, .final-balance td {
       font-size: 1rem;
   }
   
-  /* 所得がマイナスの場合の文字色 */
+  /* マイナスの場合の文字色 */
   .negative {
     color: #e53935;
+  }
+  
+  /* 赤字の場合の背景色 */
+  .loss {
+      background-color: var(--loss-bg);
   }
 
   input[type=number], input[type=month] {
@@ -160,6 +173,8 @@
     <tr class="total"><td>所得 (売上 - 経費)</td><td><span id="profit">0</span></td></tr>
     <tr><td>税金(概算)</td><td><span id="tax_estimate">0</span></td></tr>
     <tr class="total"><td>手取り (所得 - 税金)</td><td><span id="net_profit">0</span></td></tr>
+    <tr><td>固定費</td><td><span id="fixed_cost">0</span></td></tr>
+    <tr class="final-balance"><td>残額 (手取り - 固定費)</td><td><span id="final_balance">0</span></td></tr>
     </tbody>
 </table>
 
@@ -168,34 +183,50 @@
 <script>
 // --- ここからJavaScript修正 ---
 
+// 月間必要出費（固定費）を定数として設定
+const MONTHLY_FIXED_COST = 90000;
+
 // 入力欄のIDリストを更新
 const inputIds = [
-  'sales', // 売上を追加
+  'sales', // 売上
   'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2',
   'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_4', 'mizuho_health',
   'sparkle', 'rent', 'recruit'
-  // 'tax', 'goal' は自動計算になったので削除
 ];
 
 function v(id){return Number(document.getElementById(id).value || 0);}
 
-// 表示用の関数を更新（マイナスの場合に色を付ける機能を追加）
-function s(id, val){
+// 表示用の関数を更新（マイナスの場合のスタイル制御を追加）
+function s(id, val, isFinalBalance = false){
   const el = document.getElementById(id);
+  const parentRow = el.closest('tr'); // 親の行要素を取得
+
   el.textContent = val.toLocaleString();
+  
+  // マイナス数値の文字色
   if (val < 0) {
     el.classList.add('negative');
   } else {
     el.classList.remove('negative');
   }
-}
 
+  // 最終残額の場合、行の背景色も変更
+  if (isFinalBalance && parentRow) {
+      if (val < 0) {
+          parentRow.classList.add('loss');
+          parentRow.classList.remove('total');
+      } else {
+          parentRow.classList.remove('loss');
+          parentRow.classList.add('total');
+      }
+  }
+}
 
 function setTitleFromYM(){
   const ym=document.getElementById('ym').value;
   if(!ym)return;
   const [y,m]=ym.split('-');
-  document.getElementById('title').textContent=`${y}.${Number(m)}の収支`; // タイトルを少し変更
+  document.getElementById('title').textContent=`${y}.${Number(m)}の収支`;
 }
 
 function saveData() {
@@ -216,8 +247,6 @@ function loadData() {
   if (savedData) {
     const data = JSON.parse(savedData);
     inputIds.forEach(id => {
-      // 0は保存されているが、空欄にしたい場合があるため、
-      // `data[id] || ''` のようにせず、そのまま値をセットする
       document.getElementById(id).value = data[id];
     });
   } else {
@@ -228,7 +257,7 @@ function loadData() {
   calc();
 }
 
-// 計算ロジックを全面的に更新
+// 計算ロジックを更新
 function calc(){
   // --- 支出の計算 ---
   const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2');
@@ -240,28 +269,29 @@ function calc(){
   const bankTotal = sumitomoTotal + mizuhoTotal;
   s('bank_total', bankTotal);
 
-  // 経費合計を計算
   const expenseTotal = bankTotal + v('sparkle') + v('rent') + v('recruit');
   s('expense_total', expenseTotal);
 
   // --- 収支と税金の計算 ---
   const sales = v('sales');
   
-  // 1. 所得を計算
   const profit = sales - expenseTotal;
   s('profit', profit);
 
-  // 2. 税金を計算（所得がマイナスの場合は税金0）
-  const taxableProfit = Math.max(0, profit); // 課税対象の所得（0未満にはならない）
-  const taxRate = 0.10 + 0.15 + 0.05; // 住民税10% + 所得税15% + 事業税5%
+  const taxableProfit = Math.max(0, profit);
+  const taxRate = 0.10 + 0.15 + 0.05;
   const taxEstimate = Math.round(taxableProfit * taxRate);
   s('tax_estimate', taxEstimate);
   
-  // 3. 手取りを計算
   const netProfit = profit - taxEstimate;
   s('net_profit', netProfit);
 
-  saveData(); // データを自動保存
+  // --- 固定費と最終残額の計算 ---
+  s('fixed_cost', MONTHLY_FIXED_COST); // 固定費を表示
+  const finalBalance = netProfit - MONTHLY_FIXED_COST;
+  s('final_balance', finalBalance, true); // 第3引数にtrueを渡して最終残額であることを示す
+
+  saveData();
 }
 
 // ページ読み込み時の処理
@@ -270,10 +300,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   setTitleFromYM();
   loadData();
 
-  // 全ての入力欄で入力があるたびに再計算する
   document.querySelectorAll('input[type=number]').forEach(el => el.addEventListener('input', calc));
   
-  // 対象月が変更された時の処理
   document.getElementById('ym').addEventListener('input', () => {
     setTitleFromYM();
     loadData();
