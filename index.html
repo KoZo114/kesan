@@ -5,55 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>月次収支シート</title>
 <style>
-  /* --- ここからデザイン修正 --- */
+  /* --- デザイン修正 --- */
   
   :root {
-    --border-color: #ddd; /* 線の色を統一 */
-    --accent-color: #007bff; /* アクセントカラー（青色） */
-    --profit-bg: #e6f7ff;  /* 利益が出た時の背景色 */
-    --loss-bg: #ffebee;   /* 赤字の時の背景色 */
+    --border-color: #ddd;
+    --accent-color: #007bff;
+    --profit-bg: #e6f7ff;
+    --loss-bg: #ffebee;
+    --btn-save-bg: #28a745; /* 保存ボタンの色（緑） */
+    --btn-load-bg: #17a2b8; /* 読込ボタンの色（青緑） */
   }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
     margin: 0;
     padding: 2rem 1rem;
-    color: #333; /* 文字色を少し柔らかく */
-    background-color: #f4f7f9; /* 背景に薄いグレーを設定 */
+    color: #333;
+    background-color: #f4f7f9;
   }
 
   .wrapper {
-    max-width: 580px; /* 少し幅を広げる */
+    max-width: 580px;
     margin: 0 auto;
-    background-color: #fff; /* 本体背景を白に */
-    border-radius: 8px; /* 角を丸くする */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* カード風の影をつける */
-    padding: 1.5rem 2rem; /* 内側の余白を調整 */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 1.5rem 2rem;
   }
 
   h1 {
     font-size: 1.5rem;
     margin: 0 0 1.5rem;
     text-align: center;
-    color: #2c3e50; /* 見出しの色 */
+    color: #2c3e50;
   }
 
   table {
     border-collapse: collapse;
     width: 100%;
-    border-top: 2px solid var(--border-color); /* 上部の線を強調 */
+    border-top: 2px solid var(--border-color);
+    margin-bottom: 2rem; /* ボタンとの間隔 */
   }
 
   th, td {
     border: 1px solid var(--border-color);
-    border-top: none; /* 上の線と重ならないように */
-    padding: .6rem; /* セルの余白を少し広げる */
+    border-top: none;
+    padding: .6rem;
     text-align: right;
     font-size: .95rem;
   }
   
   th {
-    background-color: #f9fafb; /* 見出し行の背景色 */
+    background-color: #f9fafb;
     font-weight: 600;
   }
 
@@ -61,48 +64,26 @@
     text-align: left;
   }
 
-  .subtotal {
-    background: #f5f5f5;
-    font-weight: bold;
-  }
-
-  .total {
-    background: var(--profit-bg); /* 合計欄の背景色を水色に */
-    font-weight: bold;
-  }
+  .subtotal { background: #f5f5f5; font-weight: bold; }
+  .total { background: var(--profit-bg); font-weight: bold; }
   
-  /* 最終的な残額のスタイル */
-  .final-balance {
-      font-size: 1.1rem;
-      font-weight: bold;
-  }
+  .final-balance { font-size: 1.1rem; font-weight: bold; }
+  .total td, .final-balance td { font-size: 1rem; }
   
-  .total td, .final-balance td {
-      font-size: 1rem;
-  }
-  
-  /* マイナスの場合の文字色 */
-  .negative {
-    color: #e53935;
-  }
-  
-  /* 赤字の場合の背景色 */
-  .loss {
-      background-color: var(--loss-bg);
-  }
+  .negative { color: #e53935; }
+  .loss { background-color: var(--loss-bg); }
 
   input[type=number], input[type=month] {
-    width: 100%; /* 幅を親要素に合わせる */
+    width: 100%;
     box-sizing: border-box;
     text-align: right;
     font-size: 1rem;
     padding: .4rem .5rem;
     border: 1px solid #ccc;
-    border-radius: 5px; /* 入力欄の角を丸く */
-    transition: border-color 0.2s, box-shadow 0.2s; /* アニメーション効果 */
+    border-radius: 5px;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   
-  /* 入力欄を選択した時のデザイン */
   input:focus {
     outline: none;
     border-color: var(--accent-color);
@@ -115,17 +96,47 @@
     margin-bottom: .8rem;
     font-size: 1rem;
   }
-  
-  #balance {
-    color: var(--accent-color);
-    font-size: 1.2em; /* 差額の文字を少し大きく */
-  }
 
-  /* --- スマホ・印刷設定は変更なし --- */
+  /* --- 新規追加：バックアップ操作エリアのデザイン --- */
+  .backup-area {
+    border-top: 2px dashed #eee;
+    padding-top: 1.5rem;
+    text-align: center;
+  }
+  .backup-title {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .btn {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-weight: bold;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn-save { background-color: var(--btn-save-bg); }
+  .btn-load { background-color: var(--btn-load-bg); }
+  
+  /* ファイル選択ボタンは隠す */
+  #fileInput { display: none; }
+
+  /* --- スマホ・印刷設定 --- */
   @media (max-width:600px){
     body{padding: 1rem 0;}
     .wrapper{border-radius:0; box-shadow:none; padding: 1rem;}
     h1{font-size:1.2rem;}
+    .btn-group { flex-direction: column; } /* スマホではボタンを縦並びに */
   }
 
   @media print{
@@ -133,11 +144,10 @@
     body{padding:0;color:#000;font-size:11px; background:none;}
     .wrapper{max-width:17cm; box-shadow:none; padding:0; border-radius:0;}
     h1{font-size:1rem;margin:.2rem 0 .6rem;}
-    label{display:none;}
+    label, .backup-area {display:none;} /* 印刷時はボタンエリアを隠す */
     input{border:none !important; background:none !important; width:auto !important; font-size:11px !important; padding:0 !important; box-shadow:none !important;}
     th,td{font-size:11px;padding:.35rem;}
   }
-  /* --- ここまでデザイン修正 --- */
 </style>
 </head>
 <body>
@@ -175,20 +185,28 @@
     <tr class="total"><td>手取り (所得 - 税金)</td><td><span id="net_profit">0</span></td></tr>
     <tr><td>固定費</td><td><span id="fixed_cost">0</span></td></tr>
     <tr class="final-balance"><td>残額 (手取り - 固定費)</td><td><span id="final_balance">0</span></td></tr>
-    </tbody>
+  </tbody>
 </table>
+
+<div class="backup-area">
+  <div class="backup-title">データのバックアップ</div>
+  <div class="btn-group">
+    <button class="btn btn-save" onclick="exportToJson()">データを保存 (ダウンロード)</button>
+    <button class="btn btn-load" onclick="document.getElementById('fileInput').click()">データを復元 (読込)</button>
+  </div>
+  <input type="file" id="fileInput" accept=".json" onchange="importFromJson(this)">
+</div>
 
 </div>
 
 <script>
-// --- ここからJavaScript修正 ---
+// --- JavaScript ---
 
-// 月間必要出費（固定費）を定数として設定
 const MONTHLY_FIXED_COST = 90000;
 
-// 入力欄のIDリストを更新
+// 入力欄のIDリスト
 const inputIds = [
-  'sales', // 売上
+  'sales',
   'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2',
   'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_4', 'mizuho_health',
   'sparkle', 'rent', 'recruit'
@@ -196,21 +214,18 @@ const inputIds = [
 
 function v(id){return Number(document.getElementById(id).value || 0);}
 
-// 表示用の関数を更新（マイナスの場合のスタイル制御を追加）
 function s(id, val, isFinalBalance = false){
   const el = document.getElementById(id);
-  const parentRow = el.closest('tr'); // 親の行要素を取得
+  const parentRow = el.closest('tr');
 
   el.textContent = val.toLocaleString();
   
-  // マイナス数値の文字色
   if (val < 0) {
     el.classList.add('negative');
   } else {
     el.classList.remove('negative');
   }
 
-  // 最終残額の場合、行の背景色も変更
   if (isFinalBalance && parentRow) {
       if (val < 0) {
           parentRow.classList.add('loss');
@@ -229,6 +244,7 @@ function setTitleFromYM(){
   document.getElementById('title').textContent=`${y}.${Number(m)}の収支`;
 }
 
+// ▼ ブラウザ内自動保存（既存機能）
 function saveData() {
   const ym = document.getElementById('ym').value;
   if (!ym) return;
@@ -239,6 +255,7 @@ function saveData() {
   localStorage.setItem(`sheetData-${ym}`, JSON.stringify(data));
 }
 
+// ▼ ブラウザ内自動読込（既存機能）
 function loadData() {
   const ym = document.getElementById('ym').value;
   if (!ym) return;
@@ -257,7 +274,71 @@ function loadData() {
   calc();
 }
 
-// 計算ロジックを更新
+// ▼▼▼ 新規追加：ファイルへの書き出し（ダウンロード） ▼▼▼
+function exportToJson() {
+  const ym = document.getElementById('ym').value;
+  if (!ym) {
+    alert("対象月が選択されていません");
+    return;
+  }
+  
+  // 現在の入力データを取得
+  const data = {};
+  inputIds.forEach(id => {
+    data[id] = v(id);
+  });
+  data['_targetMonth'] = ym; // 確認用に月情報も含める
+
+  // JSONファイル作成
+  const jsonString = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonString], {type: "application/json"});
+  
+  // ダウンロードリンクを生成してクリック
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `収支データ_${ym}.json`;
+  link.click();
+}
+
+// ▼▼▼ 新規追加：ファイルからの読み込み（復元） ▼▼▼
+function importFromJson(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const result = e.target.result;
+      const data = JSON.parse(result);
+      
+      // データの中身を画面に反映
+      inputIds.forEach(id => {
+        if (data[id] !== undefined) {
+          document.getElementById(id).value = data[id];
+        }
+      });
+
+      // ファイル内の月情報があれば、月選択も合わせる（オプション）
+      if (data['_targetMonth']) {
+        document.getElementById('ym').value = data['_targetMonth'];
+        setTitleFromYM();
+      }
+
+      // 再計算して、ブラウザにも保存し直す
+      calc();
+      saveData(); // ここでlocalStorageも更新することで、リロードしても消えなくなる
+      
+      alert("データを復元しました！");
+    } catch (err) {
+      console.error(err);
+      alert("ファイルの読み込みに失敗しました。正しいJSONファイルか確認してください。");
+    }
+    // 同じファイルを再度選べるようにリセット
+    input.value = ''; 
+  };
+  reader.readAsText(file);
+}
+
 function calc(){
   // --- 支出の計算 ---
   const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2');
@@ -287,16 +368,20 @@ function calc(){
   s('net_profit', netProfit);
 
   // --- 固定費と最終残額の計算 ---
-  s('fixed_cost', MONTHLY_FIXED_COST); // 固定費を表示
+  s('fixed_cost', MONTHLY_FIXED_COST);
   const finalBalance = netProfit - MONTHLY_FIXED_COST;
-  s('final_balance', finalBalance, true); // 第3引数にtrueを渡して最終残額であることを示す
+  s('final_balance', finalBalance, true);
 
+  // 計算のたびに自動保存（ブラウザ内）
   saveData();
 }
 
-// ページ読み込み時の処理
 window.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('ym').value = new Date().toISOString().slice(0,7);
+  // 今月をセット（保存データがなければ）
+  if (!document.getElementById('ym').value) {
+      document.getElementById('ym').value = new Date().toISOString().slice(0,7);
+  }
+  
   setTitleFromYM();
   loadData();
 
@@ -307,7 +392,6 @@ window.addEventListener('DOMContentLoaded',()=>{
     loadData();
   });
 });
-// --- ここまでJavaScript修正 ---
 </script>
 </body>
 </html>
