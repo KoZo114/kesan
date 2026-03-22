@@ -350,7 +350,7 @@ function calc(){
   const bankTotal = sumitomoTotal + mizuhoTotal;
   s('bank_total', bankTotal);
 
-  const expenseTotal = bankTotal + v('sparkle') + v('rent') + v('recruit');
+  const expenseTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sparkle') + v('rent') + v('recruit');
   s('expense_total', expenseTotal);
 
   // --- 収支と税金の計算 ---
