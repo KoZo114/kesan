@@ -12,8 +12,8 @@
     --accent-color: #007bff;
     --profit-bg: #e6f7ff;
     --loss-bg: #ffebee;
-    --btn-save-bg: #28a745; /* 保存ボタンの色（緑） */
-    --btn-load-bg: #17a2b8; /* 読込ボタンの色（青緑） */
+    --btn-save-bg: #28a745;
+    --btn-load-bg: #17a2b8;
   }
 
   body {
@@ -44,7 +44,7 @@
     border-collapse: collapse;
     width: 100%;
     border-top: 2px solid var(--border-color);
-    margin-bottom: 2rem; /* ボタンとの間隔 */
+    margin-bottom: 2rem;
   }
 
   th, td {
@@ -97,7 +97,6 @@
     font-size: 1rem;
   }
 
-  /* --- 新規追加：バックアップ操作エリアのデザイン --- */
   .backup-area {
     border-top: 2px dashed #eee;
     padding-top: 1.5rem;
@@ -128,15 +127,13 @@
   .btn-save { background-color: var(--btn-save-bg); }
   .btn-load { background-color: var(--btn-load-bg); }
   
-  /* ファイル選択ボタンは隠す */
   #fileInput { display: none; }
 
-  /* --- スマホ・印刷設定 --- */
   @media (max-width:600px){
     body{padding: 1rem 0;}
     .wrapper{border-radius:0; box-shadow:none; padding: 1rem;}
     h1{font-size:1.2rem;}
-    .btn-group { flex-direction: column; } /* スマホではボタンを縦並びに */
+    .btn-group { flex-direction: column; }
   }
 
   @media print{
@@ -144,7 +141,7 @@
     body{padding:0;color:#000;font-size:11px; background:none;}
     .wrapper{max-width:17cm; box-shadow:none; padding:0; border-radius:0;}
     h1{font-size:1rem;margin:.2rem 0 .6rem;}
-    label, .backup-area {display:none;} /* 印刷時はボタンエリアを隠す */
+    label, .backup-area {display:none;}
     input{border:none !important; background:none !important; width:auto !important; font-size:11px !important; padding:0 !important; box-shadow:none !important;}
     th,td{font-size:11px;padding:.35rem;}
   }
@@ -160,16 +157,17 @@
   <thead><tr><th>科目</th><th>金額(円)</th></tr></thead>
   <tbody>
     <tr><td>売上</td><td><input id="sales" type="number"></td></tr>
+    
     <tr><td>経費</td><td><input id="sumitomo_keihi" type="number"></td></tr>
     <tr><td>Amazon</td><td><input id="sumitomo_amazon" type="number"></td></tr>
     <tr><td>保険①</td><td><input id="sumitomo_etc1" type="number"></td></tr>
     <tr><td>保険②</td><td><input id="sumitomo_etc2" type="number"></td></tr>
+    <tr><td>MacBook代</td><td><input id="sumitomo_macbook" type="number"></td></tr>
     <tr class="subtotal"><td>住友 小計</td><td><span id="sumitomo_total">0</span></td></tr>
 
     <tr><td>楽天カード</td><td><input id="mizuho_1" type="number"></td></tr>
     <tr><td>PayPayカード</td><td><input id="mizuho_2" type="number"></td></tr>
     <tr><td>UCカード</td><td><input id="mizuho_3" type="number"></td></tr>
-    <tr><td>MacBook代</td><td><input id="mizuho_4" type="number"></td></tr>
     <tr><td>健康保険</td><td><input id="mizuho_health" type="number"></td></tr>
     <tr class="subtotal"><td>みずほ 小計</td><td><span id="mizuho_total">0</span></td></tr>
 
@@ -204,11 +202,11 @@
 
 const MONTHLY_FIXED_COST = 90000;
 
-// 入力欄のIDリスト
+// ▼ 入力欄のIDリストも更新しました（mizuho_4 を sumitomo_macbook に変更）
 const inputIds = [
   'sales',
-  'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2',
-  'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_4', 'mizuho_health',
+  'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2', 'sumitomo_macbook',
+  'mizuho_1', 'mizuho_2', 'mizuho_3', 'mizuho_health',
   'sparkle', 'rent', 'recruit'
 ];
 
@@ -244,7 +242,6 @@ function setTitleFromYM(){
   document.getElementById('title').textContent=`${y}.${Number(m)}の収支`;
 }
 
-// ▼ ブラウザ内自動保存（既存機能）
 function saveData() {
   const ym = document.getElementById('ym').value;
   if (!ym) return;
@@ -255,7 +252,6 @@ function saveData() {
   localStorage.setItem(`sheetData-${ym}`, JSON.stringify(data));
 }
 
-// ▼ ブラウザ内自動読込（既存機能）
 function loadData() {
   const ym = document.getElementById('ym').value;
   if (!ym) return;
@@ -263,8 +259,14 @@ function loadData() {
 
   if (savedData) {
     const data = JSON.parse(savedData);
+    
+    // ▼ 古いデータ（mizuho_4）があれば新しい項目に引き継ぐ処理を少し加えています
+    if (data['mizuho_4'] !== undefined && data['sumitomo_macbook'] === undefined) {
+        data['sumitomo_macbook'] = data['mizuho_4'];
+    }
+
     inputIds.forEach(id => {
-      document.getElementById(id).value = data[id];
+      document.getElementById(id).value = data[id] !== undefined ? data[id] : '';
     });
   } else {
     inputIds.forEach(id => {
@@ -274,7 +276,6 @@ function loadData() {
   calc();
 }
 
-// ▼▼▼ 新規追加：ファイルへの書き出し（ダウンロード） ▼▼▼
 function exportToJson() {
   const ym = document.getElementById('ym').value;
   if (!ym) {
@@ -282,25 +283,21 @@ function exportToJson() {
     return;
   }
   
-  // 現在の入力データを取得
   const data = {};
   inputIds.forEach(id => {
     data[id] = v(id);
   });
-  data['_targetMonth'] = ym; // 確認用に月情報も含める
+  data['_targetMonth'] = ym;
 
-  // JSONファイル作成
   const jsonString = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonString], {type: "application/json"});
   
-  // ダウンロードリンクを生成してクリック
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = `収支データ_${ym}.json`;
   link.click();
 }
 
-// ▼▼▼ 新規追加：ファイルからの読み込み（復元） ▼▼▼
 function importFromJson(input) {
   const file = input.files[0];
   if (!file) return;
@@ -311,40 +308,41 @@ function importFromJson(input) {
       const result = e.target.result;
       const data = JSON.parse(result);
       
-      // データの中身を画面に反映
+      // ▼ 古いファイルデータ（mizuho_4）があれば新しい項目に引き継ぐ
+      if (data['mizuho_4'] !== undefined && data['sumitomo_macbook'] === undefined) {
+          data['sumitomo_macbook'] = data['mizuho_4'];
+      }
+
       inputIds.forEach(id => {
         if (data[id] !== undefined) {
           document.getElementById(id).value = data[id];
         }
       });
 
-      // ファイル内の月情報があれば、月選択も合わせる（オプション）
       if (data['_targetMonth']) {
         document.getElementById('ym').value = data['_targetMonth'];
         setTitleFromYM();
       }
 
-      // 再計算して、ブラウザにも保存し直す
       calc();
-      saveData(); // ここでlocalStorageも更新することで、リロードしても消えなくなる
+      saveData();
       
       alert("データを復元しました！");
     } catch (err) {
       console.error(err);
       alert("ファイルの読み込みに失敗しました。正しいJSONファイルか確認してください。");
     }
-    // 同じファイルを再度選べるようにリセット
     input.value = ''; 
   };
   reader.readAsText(file);
 }
 
 function calc(){
-  // --- 支出の計算 ---
-  const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2');
+  // ▼ 計算式も修正しました
+  const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2') + v('sumitomo_macbook');
   s('sumitomo_total', sumitomoTotal);
 
-  const mizuhoTotal = v('mizuho_1') + v('mizuho_2') + v('mizuho_3') + v('mizuho_4') + v('mizuho_health');
+  const mizuhoTotal = v('mizuho_1') + v('mizuho_2') + v('mizuho_3') + v('mizuho_health');
   s('mizuho_total', mizuhoTotal);
 
   const bankTotal = sumitomoTotal + mizuhoTotal;
@@ -353,7 +351,6 @@ function calc(){
   const expenseTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sparkle') + v('rent') + v('recruit');
   s('expense_total', expenseTotal);
 
-  // --- 収支と税金の計算 ---
   const sales = v('sales');
   
   const profit = sales - expenseTotal;
@@ -367,17 +364,14 @@ function calc(){
   const netProfit = profit - taxEstimate;
   s('net_profit', netProfit);
 
-  // --- 固定費と最終残額の計算 ---
   s('fixed_cost', MONTHLY_FIXED_COST);
   const finalBalance = netProfit - MONTHLY_FIXED_COST;
   s('final_balance', finalBalance, true);
 
-  // 計算のたびに自動保存（ブラウザ内）
   saveData();
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
-  // 今月をセット（保存データがなければ）
   if (!document.getElementById('ym').value) {
       document.getElementById('ym').value = new Date().toISOString().slice(0,7);
   }
