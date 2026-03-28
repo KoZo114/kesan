@@ -67,7 +67,7 @@
   .subtotal { background: #f5f5f5; font-weight: bold; }
   .total { background: var(--profit-bg); font-weight: bold; }
   
-  .final-balance { font-size: 1.1rem; font-weight: bold; }
+  .final-balance { font-size: 1.05rem; font-weight: bold; }
   .total td, .final-balance td { font-size: 1rem; }
   
   .negative { color: #e53935; }
@@ -182,7 +182,7 @@
     <tr><td>税金(概算)</td><td><span id="tax_estimate">0</span></td></tr>
     <tr class="total"><td>手取り (所得 - 税金)</td><td><span id="net_profit">0</span></td></tr>
     <tr><td>固定費</td><td><span id="fixed_cost">0</span></td></tr>
-    <tr class="final-balance"><td>残額 (手取り＋みずほ小計－固定費)</td><td><span id="final_balance">0</span></td></tr>
+    <tr class="final-balance"><td>残額 (手取り＋経費＋Amazon－みずほ小計－固定費)</td><td><span id="final_balance">0</span></td></tr>
   </tbody>
 </table>
 
@@ -372,8 +372,8 @@ function calc(){
 
   s('fixed_cost', MONTHLY_FIXED_COST);
   
-  // みずほ小計を足して固定費を引く
-  const finalBalance = netProfit + mizuhoTotal - MONTHLY_FIXED_COST;
+  // 手取り ＋ 経費 ＋ Amazon － みずほ小計 － 固定費
+  const finalBalance = netProfit + v('sumitomo_keihi') + v('sumitomo_amazon') - mizuhoTotal - MONTHLY_FIXED_COST;
   s('final_balance', finalBalance, true);
 
   saveData();
