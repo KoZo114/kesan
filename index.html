@@ -182,7 +182,7 @@
     <tr><td>税金(概算)</td><td><span id="tax_estimate">0</span></td></tr>
     <tr class="total"><td>手取り (所得 - 税金)</td><td><span id="net_profit">0</span></td></tr>
     <tr><td>固定費</td><td><span id="fixed_cost">0</span></td></tr>
-    <tr class="final-balance"><td>残額 (手取り - 固定費)</td><td><span id="final_balance">0</span></td></tr>
+    <tr class="final-balance"><td>残額 (手取り＋みずほ小計－固定費)</td><td><span id="final_balance">0</span></td></tr>
   </tbody>
 </table>
 
@@ -202,7 +202,6 @@
 
 const MONTHLY_FIXED_COST = 90000;
 
-// ▼ 入力欄のIDリストも更新しました（mizuho_4 を sumitomo_macbook に変更）
 const inputIds = [
   'sales',
   'sumitomo_keihi', 'sumitomo_amazon', 'sumitomo_etc1', 'sumitomo_etc2', 'sumitomo_macbook',
@@ -260,7 +259,6 @@ function loadData() {
   if (savedData) {
     const data = JSON.parse(savedData);
     
-    // ▼ 古いデータ（mizuho_4）があれば新しい項目に引き継ぐ処理を少し加えています
     if (data['mizuho_4'] !== undefined && data['sumitomo_macbook'] === undefined) {
         data['sumitomo_macbook'] = data['mizuho_4'];
     }
@@ -308,7 +306,6 @@ function importFromJson(input) {
       const result = e.target.result;
       const data = JSON.parse(result);
       
-      // ▼ 古いファイルデータ（mizuho_4）があれば新しい項目に引き継ぐ
       if (data['mizuho_4'] !== undefined && data['sumitomo_macbook'] === undefined) {
           data['sumitomo_macbook'] = data['mizuho_4'];
       }
@@ -338,7 +335,6 @@ function importFromJson(input) {
 }
 
 function calc(){
-  // ▼ 計算式も修正しました
   const sumitomoTotal = v('sumitomo_keihi') + v('sumitomo_amazon') + v('sumitomo_etc1') + v('sumitomo_etc2') + v('sumitomo_macbook');
   s('sumitomo_total', sumitomoTotal);
 
@@ -356,8 +352,18 @@ function calc(){
   const profit = sales - expenseTotal;
   s('profit', profit);
 
-  const taxableProfit = Math.max(0, profit);
-  const taxRate = 0.10 + 0.15 + 0.05;
+  // 申告書ベースの毎月の固定控除（約17.5万円）
+  const baseDeduction = 175000; 
+  
+  // シートに入力されている健康保険料（社会保険料控除）を加算
+  const healthInsurance = v('mizuho_health'); 
+  const totalDeduction = baseDeduction + healthInsurance;
+
+  // 所得から控除の合計を引いた額を課税対象とする（マイナスの場合は0円）
+  const taxableProfit = Math.max(0, profit - totalDeduction);
+  
+  // 税率：所得税(5%)＋住民税(約10%)で約15%
+  const taxRate = 0.15; 
   const taxEstimate = Math.round(taxableProfit * taxRate);
   s('tax_estimate', taxEstimate);
   
@@ -365,7 +371,9 @@ function calc(){
   s('net_profit', netProfit);
 
   s('fixed_cost', MONTHLY_FIXED_COST);
-  const finalBalance = netProfit - MONTHLY_FIXED_COST;
+  
+  // みずほ小計を足して固定費を引く
+  const finalBalance = netProfit + mizuhoTotal - MONTHLY_FIXED_COST;
   s('final_balance', finalBalance, true);
 
   saveData();
