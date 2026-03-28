@@ -352,12 +352,8 @@ function calc(){
   const profit = sales - expenseTotal;
   s('profit', profit);
 
-  // 申告書ベースの毎月の固定控除（約17.5万円）
-  const baseDeduction = 175000; 
-  
-  // シートに入力されている健康保険料（社会保険料控除）を加算
-  const healthInsurance = v('mizuho_health'); 
-  const totalDeduction = baseDeduction + healthInsurance;
+  // 申告書ベースの毎月の固定控除（約17.5万円）のみを引く形に変更
+  const totalDeduction = 175000; 
 
   // 所得から控除の合計を引いた額を課税対象とする（マイナスの場合は0円）
   const taxableProfit = Math.max(0, profit - totalDeduction);
